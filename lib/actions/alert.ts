@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { alert, user } from "@/lib/schema"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { eq } from "drizzle-orm"
+import { eq, inArray, sql, desc } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 
 async function getSession() {
@@ -39,7 +39,18 @@ export async function getAllAlerts(): Promise<AlertWithUser[]> {
   const session = await getSession()
   if (!session?.user) return []
 
+  const latestPerUser = db.$with("latest_per_user").as(
+    db
+      .select({
+        userId: alert.userId,
+        maxCreatedAt: sql<Date>`max(${alert.createdAt})`.as("max_created"),
+      })
+      .from(alert)
+      .groupBy(alert.userId)
+  )
+
   return db
+    .with(latestPerUser)
     .select({
       id: alert.id,
       userId: alert.userId,
@@ -53,7 +64,9 @@ export async function getAllAlerts(): Promise<AlertWithUser[]> {
     })
     .from(alert)
     .innerJoin(user, eq(alert.userId, user.id))
-    .orderBy(alert.createdAt)
+    .innerJoin(latestPerUser, eq(alert.userId, latestPerUser.userId))
+    .where(eq(alert.createdAt, latestPerUser.maxCreatedAt))
+    .orderBy(desc(alert.createdAt))
 }
 
 export async function deleteAllAlerts() {
