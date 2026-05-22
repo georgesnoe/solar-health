@@ -35,7 +35,7 @@ export default function SigninPage() {
       if (authError) {
         setError(translations[authError.message ?? ""] ?? authError.message ?? "Une erreur s'est produite")
       } else {
-        router.push("/dashboard")
+        router.push("/tableau-de-bord")
       }
     } catch {
       setError("Une erreur inattendue s'est produite")
