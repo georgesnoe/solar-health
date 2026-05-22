@@ -18,6 +18,8 @@ export type InterventionWithDetails = {
   technicianId: string
   technicianName: string
   technicianPhone: string | null
+  technicianLatitude: string | null
+  technicianLongitude: string | null
   clientId: string
   clientName: string
   clientPhone: string | null
@@ -86,6 +88,8 @@ export async function getInterventionById(
       updatedAt: intervention.updatedAt,
       technicianName: user.name,
       technicianPhone: user.phone,
+      technicianLatitude: user.latitude,
+      technicianLongitude: user.longitude,
     })
     .from(intervention)
     .innerJoin(user, eq(intervention.technicianId, user.id))
@@ -162,6 +166,8 @@ export async function getTechnicianInterventions(): Promise<InterventionWithDeta
       ...row,
       technicianName: session.user.name ?? "",
       technicianPhone: null,
+      technicianLatitude: null,
+      technicianLongitude: null,
       review: rev.length > 0 ? rev[0] : null,
     })
   }

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { IconUser, IconBrandWhatsapp, IconAlertTriangle, IconMapPin, IconClipboardList } from "@tabler/icons-react"
 
 const LocationMap = dynamic(
-  () => import("@/components/location-picker").then((m) => ({ default: m.StaticMap })),
+  () => import("@/components/location-picker").then((m) => ({ default: m.RouteMap })),
   { ssr: false }
 )
 
@@ -94,18 +94,20 @@ export default function InterventionDetailPage() {
         </CardContent>
       </Card>
 
-      {intervention.clientLatitude && intervention.clientLongitude && (
+      {intervention.clientLatitude && intervention.clientLongitude && intervention.technicianLatitude && intervention.technicianLongitude && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <IconMapPin size={18} />
-              Localisation du client
+              Itinéraire
             </CardTitle>
           </CardHeader>
           <CardContent>
             <LocationMap
-              latitude={intervention.clientLatitude}
-              longitude={intervention.clientLongitude}
+              technicianLatitude={intervention.technicianLatitude}
+              technicianLongitude={intervention.technicianLongitude}
+              clientLatitude={intervention.clientLatitude}
+              clientLongitude={intervention.clientLongitude}
             />
           </CardContent>
         </Card>
