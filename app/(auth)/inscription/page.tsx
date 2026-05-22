@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { IconUser, IconTool } from "@tabler/icons-react"
-import { useAuthRedirect } from "@/lib/use-auth-redirect"
 
 type Role = "client" | "technician"
 
@@ -22,8 +20,6 @@ const translations: Record<string, string> = {
 }
 
 export default function SignupPage() {
-  useAuthRedirect()
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
@@ -47,7 +43,7 @@ export default function SignupPage() {
       if (authError) {
         setError(translations[authError.message ?? ""] ?? authError.message ?? "Une erreur s'est produite")
       } else {
-        router.push("/tableau-de-bord")
+        window.location.href = "/tableau-de-bord"
       }
     } catch {
       setError("Une erreur inattendue s'est produite")

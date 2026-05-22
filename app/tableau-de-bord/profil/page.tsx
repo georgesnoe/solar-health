@@ -297,7 +297,7 @@ export default function ProfilPage() {
             className="w-full"
             onClick={async () => {
               await authClient.signOut()
-              router.push("/")
+              window.location.href = "/"
             }}
           >
             <IconLogout size={16} className="mr-1" />

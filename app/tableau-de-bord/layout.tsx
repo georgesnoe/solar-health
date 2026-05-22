@@ -122,7 +122,7 @@ export default function DashboardLayout({
 
   const handleSignOut = async () => {
     await authClient.signOut()
-    router.push("/connexion")
+    window.location.href = "/"
   }
 
   return (

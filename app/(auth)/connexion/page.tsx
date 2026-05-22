@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useCallback } from "react"
 import { useAuthRedirect } from "@/lib/use-auth-redirect"
 
 const translations: Record<string, string> = {
@@ -18,7 +17,6 @@ const translations: Record<string, string> = {
 
 export default function SigninPage() {
   useAuthRedirect()
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -36,7 +34,9 @@ export default function SigninPage() {
       if (authError) {
         setError(translations[authError.message ?? ""] ?? authError.message ?? "Une erreur s'est produite")
       } else {
-        router.push("/tableau-de-bord")
+        const params = new URLSearchParams(window.location.search)
+        const callbackURL = params.get("callbackURL") || "/tableau-de-bord"
+        window.location.href = callbackURL
       }
     } catch {
       setError("Une erreur inattendue s'est produite")
