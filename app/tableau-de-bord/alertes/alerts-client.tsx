@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback } from "react"
 import { deleteAllAlerts, getAllAlerts } from "@/lib/actions/alert"
 import type { AlertWithUser } from "@/lib/actions/alert"
+import { createIntervention } from "@/lib/actions/intervention"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconAlertTriangle, IconTrash, IconBell, IconBrandWhatsapp } from "@tabler/icons-react"
+import { IconAlertTriangle, IconTrash, IconBell, IconBrandWhatsapp, IconClipboardList } from "@tabler/icons-react"
 
 type Alert = {
   id: string
@@ -28,6 +29,7 @@ export function AlertsClient({
 }) {
   const [alerts, setAlerts] = useState(initialAlerts)
   const [deleting, setDeleting] = useState(false)
+  const [creatingId, setCreatingId] = useState<string | null>(null)
 
   const fetchAlerts = useCallback(async () => {
     if (role !== "technician") return
@@ -136,21 +138,42 @@ export function AlertsClient({
                 Production : {alert.actual} kWh (attendu : {alert.expected} kWh)
               </p>
               {isTechnician && alert.userPhone && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  render={
-                    <a
-                      href={`https://wa.me/${alert.userPhone}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    />
-                  }
-                >
-                  <IconBrandWhatsapp size={16} />
-                  Contacter le client
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    render={
+                      <a
+                        href={`https://wa.me/${alert.userPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
+                  >
+                    <IconBrandWhatsapp size={16} />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1"
+                    onClick={async () => {
+                      if (!alert.userId) return
+                      setCreatingId(alert.id)
+                      try {
+                        await createIntervention(alert.id, alert.userId)
+                      } catch {
+                        // ignore
+                      }
+                      setCreatingId(null)
+                    }}
+                    disabled={creatingId === alert.id}
+                  >
+                    <IconClipboardList size={16} />
+                    {creatingId === alert.id ? "..." : "Intervenir"}
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
