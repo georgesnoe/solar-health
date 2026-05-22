@@ -152,3 +152,48 @@ export function LocationPicker({
     </div>
   )
 }
+
+export function StaticMap({
+  latitude,
+  longitude,
+}: {
+  latitude: string
+  longitude: string
+}) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
+        Chargement de la carte…
+      </div>
+    )
+  }
+
+  const pos: [number, number] = [parseFloat(latitude), parseFloat(longitude)]
+
+  return (
+    <div className="relative h-64 overflow-hidden rounded-lg border">
+      <MapContainer
+        center={pos}
+        zoom={10}
+        minZoom={7}
+        maxBounds={togoBounds}
+        maxBoundsViscosity={1}
+        className="z-0 h-full w-full"
+        scrollWheelZoom={true}
+        dragging={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={pos} icon={defaultIcon} />
+      </MapContainer>
+    </div>
+  )
+}
