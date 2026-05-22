@@ -32,7 +32,6 @@ export default function SigninPage() {
       const { error: authError } = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/tableau-de-bord",
       })
       if (authError) {
         setError(translations[authError.message ?? ""] ?? authError.message ?? "Une erreur s'est produite")

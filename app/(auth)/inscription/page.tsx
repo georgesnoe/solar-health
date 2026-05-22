@@ -43,7 +43,6 @@ export default function SignupPage() {
         name,
         role,
         phone: phone.replace(/[\s+]/g, '') || undefined,
-        callbackURL: "/tableau-de-bord",
       } as never)
       if (authError) {
         setError(translations[authError.message ?? ""] ?? authError.message ?? "Une erreur s'est produite")
