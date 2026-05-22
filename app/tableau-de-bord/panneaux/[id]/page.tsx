@@ -36,6 +36,10 @@ export default async function PanelDetailPage({
         status: panel.status,
         installationDate: panel.installationDate?.toISOString() ?? null,
         notes: panel.notes,
+        simulationStrategy: panel.simulationStrategy,
+        simulationTrigger: panel.simulationTrigger,
+        manualProductionPct: panel.manualProductionPct,
+        manualConsumptionPct: panel.manualConsumptionPct,
       }}
       hourlyData={hourlyData}
     />

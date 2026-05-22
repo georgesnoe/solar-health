@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
   index,
   pgEnum,
 } from "drizzle-orm/pg-core"
@@ -12,6 +13,8 @@ export const userRoles = pgEnum("role", ["admin", "client", "technician"])
 export const panelStatus = pgEnum("panel_status", ["active", "inactive"])
 export const energyType = pgEnum("energy_type", ["production", "consumption"])
 export const interventionStatus = pgEnum("intervention_status", ["pending", "confirmed"])
+export const simulationStrategy = pgEnum("simulation_strategy", ["automatic", "manual"])
+export const simulationTrigger = pgEnum("simulation_trigger", ["scheduled", "on_demand"])
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -39,6 +42,10 @@ export const solarPanel = pgTable(
     powerRatingWp: text("power_rating_wp").notNull(),
     installationDate: timestamp("installation_date"),
     status: panelStatus().default("active").notNull(),
+    simulationStrategy: simulationStrategy().default("automatic").notNull(),
+    simulationTrigger: simulationTrigger().default("scheduled").notNull(),
+    manualProductionPct: integer("manual_production_pct").default(100).notNull(),
+    manualConsumptionPct: integer("manual_consumption_pct").default(50).notNull(),
     notes: text("notes"),
     userId: text("user_id")
       .notNull()

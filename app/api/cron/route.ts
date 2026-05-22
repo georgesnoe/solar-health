@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { solarPanel, energyRecord, alert, user } from "@/lib/schema"
-import { eq, inArray } from "drizzle-orm"
+import { eq, inArray, and } from "drizzle-orm"
 import { sendWhatsAppAlert } from "@/lib/whatsapp"
 
 const CRON_API_KEY = process.env.CRON_API_KEY
@@ -12,11 +12,16 @@ const hourFactor: number[] = [
   0.06, 0, 0, 0, 0, 0,
 ]
 
-function generateProduction(powerWp: number, hour: number): number {
+function generateAutomaticProduction(powerWp: number, hour: number): number {
   const baseWh = powerWp * (hourFactor[hour] ?? 0)
   const noise = 0.85 + Math.random() * 0.3
   const faulty = Math.random() < 0.25 ? 0.3 + Math.random() * 0.3 : 1
   return Math.round(((baseWh * noise * faulty) / 100)) * 100
+}
+
+function generateManualProduction(powerWp: number, hour: number, pct: number): number {
+  const maxWh = powerWp * (hourFactor[hour] ?? 0)
+  return Math.round(maxWh * (pct / 100) / 100) * 100
 }
 
 function expectedProduction(powerWp: number, hour: number): number {
@@ -43,25 +48,43 @@ export async function POST(request: Request) {
       id: solarPanel.id,
       userId: solarPanel.userId,
       powerRatingWp: solarPanel.powerRatingWp,
+      simulationStrategy: solarPanel.simulationStrategy,
+      simulationTrigger: solarPanel.simulationTrigger,
+      manualProductionPct: solarPanel.manualProductionPct,
+      manualConsumptionPct: solarPanel.manualConsumptionPct,
     })
     .from(solarPanel)
-    .where(eq(solarPanel.status, "active"))
+    .where(
+      and(
+        eq(solarPanel.status, "active"),
+        eq(solarPanel.simulationTrigger, "scheduled")
+      )
+    )
 
   if (panels.length === 0) {
     return NextResponse.json({ message: "No panels to update" })
   }
 
   const productionRecords: (typeof energyRecord.$inferInsert)[] = []
+  const consumptionRecords: (typeof energyRecord.$inferInsert)[] = []
   const userMap = new Map<string, { productionWh: number; expectedWh: number }>()
 
   for (const panel of panels) {
-    const wh = generateProduction(parseInt(panel.powerRatingWp) || 400, currentHour)
-    const expWh = expectedProduction(parseInt(panel.powerRatingWp) || 400, currentHour)
+    const wp = parseInt(panel.powerRatingWp) || 400
+    let wh: number
 
-    const user = userMap.get(panel.userId) ?? { productionWh: 0, expectedWh: 0 }
-    user.productionWh += wh
-    user.expectedWh += expWh
-    userMap.set(panel.userId, user)
+    if (panel.simulationStrategy === "manual") {
+      wh = generateManualProduction(wp, currentHour, panel.manualProductionPct)
+    } else {
+      wh = generateAutomaticProduction(wp, currentHour)
+    }
+
+    const expWh = expectedProduction(wp, currentHour)
+
+    const u = userMap.get(panel.userId) ?? { productionWh: 0, expectedWh: 0 }
+    u.productionWh += wh
+    u.expectedWh += expWh
+    userMap.set(panel.userId, u)
 
     productionRecords.push({
       id: crypto.randomUUID(),
@@ -71,20 +94,19 @@ export async function POST(request: Request) {
       value: (wh / 1000).toString(),
       recordedAt,
     })
-  }
 
-  const userIds = [...new Set(panels.map((p) => p.userId))]
-
-  const consumptionRecords: (typeof energyRecord.$inferInsert)[] = []
-  for (const userId of userIds) {
-    const user = userMap.get(userId)!
-    const maxConsumptionWh = Math.max(Math.round(user.productionWh * 0.9), 100)
-    const consumptionWh = Math.floor(Math.random() * maxConsumptionWh)
+    let consumptionWh: number
+    if (panel.simulationStrategy === "manual") {
+      consumptionWh = Math.round(wh * (panel.manualConsumptionPct / 100))
+    } else {
+      const maxConsumptionWh = Math.max(Math.round(wh * 0.9), 100)
+      consumptionWh = Math.floor(Math.random() * maxConsumptionWh)
+    }
 
     consumptionRecords.push({
       id: crypto.randomUUID(),
       panelId: null,
-      userId,
+      userId: panel.userId,
       type: "consumption",
       value: (consumptionWh / 1000).toString(),
       recordedAt,
@@ -94,16 +116,15 @@ export async function POST(request: Request) {
   await db.insert(energyRecord).values([...productionRecords, ...consumptionRecords])
 
   const alerts: (typeof alert.$inferInsert)[] = []
-  for (const userId of userIds) {
-    const user = userMap.get(userId)!
-    if (user.expectedWh > 0 && user.productionWh < user.expectedWh * 0.8) {
-      const percentage = Math.round((1 - user.productionWh / user.expectedWh) * 100)
+  for (const [userId, u] of userMap) {
+    if (u.expectedWh > 0 && u.productionWh < u.expectedWh * 0.8) {
+      const percentage = Math.round((1 - u.productionWh / u.expectedWh) * 100)
       alerts.push({
         id: crypto.randomUUID(),
         userId,
         message: `Production anormalement basse détectée`,
-        expected: (user.expectedWh / 1000).toFixed(3),
-        actual: (user.productionWh / 1000).toFixed(3),
+        expected: (u.expectedWh / 1000).toFixed(3),
+        actual: (u.productionWh / 1000).toFixed(3),
         percentage: percentage.toString(),
       })
     }
