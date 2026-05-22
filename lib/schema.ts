@@ -20,6 +20,9 @@ export const user = pgTable("user", {
   image: text("image"),
   role: userRoles().default("client"),
   phone: text("phone"),
+  visible: boolean("visible").default(false).notNull(),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

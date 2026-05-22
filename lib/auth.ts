@@ -26,6 +26,22 @@ export const auth = betterAuth({
         required: false,
         input: true,
       },
+      visible: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: true,
+      },
+      latitude: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+      longitude: {
+        type: "string",
+        required: false,
+        input: true,
+      },
     },
   },
   emailAndPassword: {
