@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { user, alert, intervention, review } from "@/lib/schema"
+import { user, session, alert, intervention, review } from "@/lib/schema"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { eq, inArray, sql, desc } from "drizzle-orm"
@@ -44,12 +44,17 @@ export async function updateUser(
   id: string,
   data: { name?: string; email?: string; role?: "admin" | "client" | "technician"; phone?: string }
 ) {
-  const session = await requireAdmin()
-  const adminId = session.user.id
+  const authSession = await requireAdmin()
+  const adminId = authSession.user.id
   if (id === adminId && data.role && data.role !== "admin") {
     throw new Error("Vous ne pouvez pas modifier votre propre rôle")
   }
   await db.update(user).set(data).where(eq(user.id, id))
+
+  if (data.role) {
+    await db.delete(session).where(eq(session.userId, id))
+  }
+
   revalidatePath("/tableau-de-bord/admin/utilisateurs")
 }
 

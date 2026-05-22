@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconEdit, IconDeviceFloppy, IconX, IconMapPin } from "@tabler/icons-react"
+import { IconEdit, IconDeviceFloppy, IconX, IconMapPin, IconLogout } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
 
 const LocationPicker = dynamic(
   () => import("@/components/location-picker").then((m) => ({ default: m.LocationPicker })),
@@ -21,6 +22,7 @@ const roleLabels: Record<string, string> = {
 }
 
 export default function ProfilPage() {
+  const router = useRouter()
   const { data, refetch } = authClient.useSession()
   const user = data?.user as {
     name: string
@@ -277,6 +279,31 @@ export default function ProfilPage() {
             </Button>
           </CardFooter>
         )}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <IconLogout size={18} />
+            Se déconnecter
+          </CardTitle>
+          <CardDescription>
+            Vous serez redirigé vers la page d&apos;accueil
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={async () => {
+              await authClient.signOut()
+              router.push("/")
+            }}
+          >
+            <IconLogout size={16} className="mr-1" />
+            Se déconnecter
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   )
