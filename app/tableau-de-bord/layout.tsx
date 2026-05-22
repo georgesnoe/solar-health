@@ -1,7 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -89,29 +88,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const router = useRouter()
   const { data, isPending } = authClient.useSession()
   const user = data?.user as { name: string; role?: string } | undefined
   const role = user?.role
   const nav = getNav(role)
-
-  useEffect(() => {
-    if (!isPending && !data) {
-      router.replace("/connexion")
-    }
-  }, [isPending, data, router])
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return null
-  }
 
   const initials = user?.name
     ?.split(" ")

@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +10,6 @@ import {
   IconTool,
   IconShieldCheck,
 } from "@tabler/icons-react"
-import { useAuthRedirect } from "@/lib/use-auth-redirect"
 
 const features = [
   {
@@ -57,18 +54,6 @@ const stats = [
 ]
 
 export default function LandingPage() {
-  const { data, isPending } = useAuthRedirect()
-
-  if (isPending) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
-      </div>
-    )
-  }
-
-  if (data) return null
-
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-50 border-b bg-white">
