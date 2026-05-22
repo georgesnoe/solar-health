@@ -343,12 +343,12 @@ export function DashboardClient({
                   <stop
                     offset="5%"
                     stopColor="var(--color-production)"
-                    stopOpacity={0.3}
+                    stopOpacity={0.5}
                   />
                   <stop
                     offset="95%"
                     stopColor="var(--color-production)"
-                    stopOpacity={0}
+                    stopOpacity={0.05}
                   />
                 </linearGradient>
                 <linearGradient
@@ -361,18 +361,18 @@ export function DashboardClient({
                   <stop
                     offset="5%"
                     stopColor="var(--color-consumption)"
-                    stopOpacity={0.3}
+                    stopOpacity={0.5}
                   />
                   <stop
                     offset="95%"
                     stopColor="var(--color-consumption)"
-                    stopOpacity={0}
+                    stopOpacity={0.05}
                   />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                className="stroke-muted"
+                className="stroke-muted/60"
               />
               <XAxis
                 dataKey="hour"
@@ -394,14 +394,14 @@ export function DashboardClient({
                 dataKey="production"
                 stroke="var(--color-production)"
                 fill="url(#fillProduction)"
-                strokeWidth={2}
+                strokeWidth={3}
               />
               <Area
                 type="monotone"
                 dataKey="consumption"
                 stroke="var(--color-consumption)"
                 fill="url(#fillConsumption)"
-                strokeWidth={2}
+                strokeWidth={3}
               />
             </AreaChart>
           </ChartContainer>
@@ -423,7 +423,7 @@ export function DashboardClient({
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                className="stroke-muted"
+                className="stroke-muted/60"
               />
               <XAxis
                 dataKey="hour"
