@@ -24,6 +24,7 @@ import {
   IconTrendingUp,
   IconAlertTriangle,
   IconBrandWhatsapp,
+  IconUser,
 } from "@tabler/icons-react"
 import { getDashboardData } from "@/lib/actions/energy"
 
@@ -76,6 +77,64 @@ export function DashboardClient({
     return () => clearInterval(interval)
   }, [fetchData])
 
+  const noPhone = !initialPhone
+
+  if (initialRole === "technician") {
+    return (
+      <div className="flex flex-1 flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold">Bonjour, {initialName}</h1>
+          <p className="text-muted-foreground">Espace Technicien</p>
+        </div>
+
+        {noPhone && (
+          <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <IconBrandWhatsapp size={20} className="mt-0.5 shrink-0" />
+            <div>
+              <strong>Ajoutez votre numéro de téléphone</strong>
+              <p className="text-blue-700">
+                Renseignez votre numéro dans votre{" "}
+                <a href="/tableau-de-bord/profil" className="underline underline-offset-2">
+                  profil
+                </a>{" "}
+                pour être contacté par vos clients.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Statut</CardTitle>
+              <IconUser size={18} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-medium text-emerald-600">Actif</div>
+              <p className="text-xs text-muted-foreground">Vous êtes inscrit en tant que technicien</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Téléphone</CardTitle>
+              <IconBrandWhatsapp size={18} className="text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-medium">
+                {initialPhone ? initialPhone : "Non renseigné"}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {initialPhone
+                  ? "Visible par vos clients"
+                  : "Ajoutez-le dans votre profil"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   const totals = data.hourlyData.reduce(
     (acc, d) => ({
       production: acc.production + d.production,
@@ -85,7 +144,6 @@ export function DashboardClient({
   )
 
   const net = totals.production - totals.consumption
-  const noPhone = !initialPhone
 
   const isLowProduction =
     data.currentExpected > 0 &&
@@ -124,21 +182,13 @@ export function DashboardClient({
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           <IconBrandWhatsapp size={20} className="mt-0.5 shrink-0" />
           <div>
-            <strong>
-              {initialRole === "technician"
-                ? "Ajoutez votre numéro de téléphone"
-                : "Activez les alertes WhatsApp"}
-            </strong>
+            <strong>Activez les alertes WhatsApp</strong>
             <p className="text-blue-700">
-              {initialRole === "technician"
-                ? "Renseignez votre numéro dans votre "
-                : "Ajoutez votre numéro de téléphone dans votre "}
+              Ajoutez votre numéro de téléphone dans votre{" "}
               <a href="/tableau-de-bord/profil" className="underline underline-offset-2">
                 profil
               </a>{" "}
-              {initialRole === "technician"
-                ? "pour être contacté par vos clients."
-                : "pour recevoir des alertes en cas de production anormale."}
+              pour recevoir des alertes en cas de production anormale.
             </p>
           </div>
         </div>
