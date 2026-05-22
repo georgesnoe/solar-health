@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono, Outfit } from "next/font/google"
 
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
@@ -18,15 +17,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="fr"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", outfit.variable)}
-    >
+    <html lang="fr" className={cn("antialiased", fontMono.variable, "font-sans", outfit.variable)}>
       <body>
-        <ThemeProvider>
-          <TooltipProvider delay={0}>{children}</TooltipProvider>
-        </ThemeProvider>
+        <TooltipProvider delay={0}>{children}</TooltipProvider>
       </body>
     </html>
   )
