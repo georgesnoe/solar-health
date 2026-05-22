@@ -36,6 +36,7 @@ import {
   IconLogout,
   IconClipboardList,
   IconBell,
+  IconMap,
 } from "@tabler/icons-react"
 import Link from "next/link"
 
@@ -63,9 +64,12 @@ const technicianNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { label: "Tableau de bord", href: "/tableau-de-bord", icon: <IconHome size={20} /> },
-  { label: "Utilisateurs", href: "/tableau-de-bord/utilisateurs", icon: <IconUsers size={20} /> },
-  { label: "Alertes", href: "/tableau-de-bord/alertes", icon: <IconAlertTriangle size={20} /> },
-  { label: "Paramètres", href: "/tableau-de-bord/parametres", icon: <IconSettings size={20} /> },
+  { label: "Administration", href: "/tableau-de-bord/admin", icon: <IconSettings size={20} /> },
+  { label: "Utilisateurs", href: "/tableau-de-bord/admin/utilisateurs", icon: <IconUsers size={20} /> },
+  { label: "Alertes", href: "/tableau-de-bord/admin/alertes", icon: <IconAlertTriangle size={20} /> },
+  { label: "Interventions", href: "/tableau-de-bord/admin/interventions", icon: <IconClipboardList size={20} /> },
+  { label: "Carte", href: "/tableau-de-bord/admin/carte", icon: <IconMap size={20} /> },
+  { label: "Profil", href: "/tableau-de-bord/profil", icon: <IconUser size={20} /> },
 ]
 
 function getNav(role: string | undefined): NavItem[] {
