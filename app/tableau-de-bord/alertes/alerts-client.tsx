@@ -1,23 +1,27 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { deleteAllAlerts, getAllAlerts } from "@/lib/actions/alert"
 import type { AlertWithUser } from "@/lib/actions/alert"
 import { createIntervention } from "@/lib/actions/intervention"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconAlertTriangle, IconTrash, IconBell, IconBrandWhatsapp, IconClipboardList } from "@tabler/icons-react"
+import { IconAlertTriangle, IconTrash, IconBell, IconBrandWhatsapp, IconClipboardList, IconCheck } from "@tabler/icons-react"
 
 type Alert = {
   id: string
   userId?: string
   userName?: string
   userPhone?: string | null
+  userLatitude?: string | null
+  userLongitude?: string | null
   message: string
   expected: string
   actual: string
   percentage: string
   createdAt: Date
+  hasIntervention?: boolean
 }
 
 export function AlertsClient({
@@ -30,6 +34,7 @@ export function AlertsClient({
   const [alerts, setAlerts] = useState(initialAlerts)
   const [deleting, setDeleting] = useState(false)
   const [creatingId, setCreatingId] = useState<string | null>(null)
+  const router = useRouter()
 
   const fetchAlerts = useCallback(async () => {
     if (role !== "technician") return
@@ -155,23 +160,24 @@ export function AlertsClient({
                     WhatsApp
                   </Button>
                   <Button
-                    variant="default"
+                    variant={alert.hasIntervention ? "outline" : "default"}
                     size="sm"
                     className="flex-1"
                     onClick={async () => {
-                      if (!alert.userId) return
+                      if (!alert.userId || alert.hasIntervention) return
                       setCreatingId(alert.id)
                       try {
-                        await createIntervention(alert.id, alert.userId)
+                        const interventionId = await createIntervention(alert.id, alert.userId)
+                        router.push(`/tableau-de-bord/interventions/${interventionId}`)
                       } catch {
                         // ignore
                       }
                       setCreatingId(null)
                     }}
-                    disabled={creatingId === alert.id}
+                    disabled={creatingId === alert.id || alert.hasIntervention}
                   >
-                    <IconClipboardList size={16} />
-                    {creatingId === alert.id ? "..." : "Intervenir"}
+                    {alert.hasIntervention ? <IconCheck size={16} /> : <IconClipboardList size={16} />}
+                    {alert.hasIntervention ? "Déjà planifiée" : creatingId === alert.id ? "..." : "Intervenir"}
                   </Button>
                 </div>
               )}
