@@ -9,6 +9,8 @@ import {
 } from "drizzle-orm/pg-core"
 
 export const userRoles = pgEnum("role", ["admin", "client", "technician"])
+export const panelStatus = pgEnum("panel_status", ["active", "inactive"])
+export const energyType = pgEnum("energy_type", ["production", "consumption"])
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -17,12 +19,53 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   role: userRoles().default("client"),
+  phone: text("phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
 })
+
+export const solarPanel = pgTable(
+  "solar_panel",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    powerRatingWp: text("power_rating_wp").notNull(),
+    installationDate: timestamp("installation_date"),
+    status: panelStatus().default("active").notNull(),
+    notes: text("notes"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("panel_userId_idx").on(table.userId)]
+)
+
+export const energyRecord = pgTable(
+  "energy_record",
+  {
+    id: text("id").primaryKey(),
+    panelId: text("panel_id").references(() => solarPanel.id, { onDelete: "set null" }),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    type: energyType().notNull(),
+    value: text("value").notNull(),
+    recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("energy_panelId_idx").on(table.panelId),
+    index("energy_userId_idx").on(table.userId),
+    index("energy_type_idx").on(table.type),
+    index("energy_recordedAt_idx").on(table.recordedAt),
+  ]
+)
 
 export const session = pgTable(
   "session",
@@ -98,6 +141,48 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}))
+
+export const solarPanelRelations = relations(solarPanel, ({ one, many }) => ({
+  user: one(user, {
+    fields: [solarPanel.userId],
+    references: [user.id],
+  }),
+  energyRecords: many(energyRecord),
+}))
+
+export const alert = pgTable(
+  "alert",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    expected: text("expected").notNull(),
+    actual: text("actual").notNull(),
+    percentage: text("percentage").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("alert_userId_idx").on(table.userId)]
+)
+
+export const alertRelations = relations(alert, ({ one }) => ({
+  user: one(user, {
+    fields: [alert.userId],
+    references: [user.id],
+  }),
+}))
+
+export const energyRecordRelations = relations(energyRecord, ({ one }) => ({
+  panel: one(solarPanel, {
+    fields: [energyRecord.panelId],
+    references: [solarPanel.id],
+  }),
+  user: one(user, {
+    fields: [energyRecord.userId],
     references: [user.id],
   }),
 }))
