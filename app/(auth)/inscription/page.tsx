@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { IconUser, IconTool } from "@tabler/icons-react"
+import { useAuthRedirect } from "@/lib/use-auth-redirect"
 
 type Role = "client" | "technician"
 
@@ -21,6 +22,7 @@ const translations: Record<string, string> = {
 }
 
 export default function SignupPage() {
+  useAuthRedirect()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

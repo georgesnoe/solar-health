@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuthRedirect } from "@/lib/use-auth-redirect"
 
 const translations: Record<string, string> = {
   "Invalid email or password": "Email ou mot de passe incorrect",
@@ -16,6 +17,7 @@ const translations: Record<string, string> = {
 }
 
 export default function SigninPage() {
+  useAuthRedirect()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
