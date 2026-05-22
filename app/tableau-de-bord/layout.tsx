@@ -49,6 +49,7 @@ const clientNav: NavItem[] = [
   { label: "Tableau de bord", href: "/tableau-de-bord", icon: <IconHome size={20} /> },
   { label: "Mes alertes", href: "/tableau-de-bord/alertes", icon: <IconBell size={20} /> },
   { label: "Mes panneaux", href: "/tableau-de-bord/panneaux", icon: <IconSolarPanel size={20} /> },
+  { label: "Techniciens", href: "/tableau-de-bord/techniciens", icon: <IconUsers size={20} /> },
   { label: "Profil", href: "/tableau-de-bord/profil", icon: <IconUser size={20} /> },
 ]
 
