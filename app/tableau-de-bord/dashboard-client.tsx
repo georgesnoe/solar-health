@@ -35,6 +35,7 @@ const chartConfig = {
 export function DashboardClient({
   userName: initialName,
   userPhone: initialPhone,
+  userRole: initialRole,
   panelCount: initialCount,
   hourlyData: initialData,
   currentProduction: initialProd,
@@ -44,6 +45,7 @@ export function DashboardClient({
 }: {
   userName: string
   userPhone: string | null
+  userRole: string
   panelCount: number
   hourlyData: HourlyEnergy[]
   currentProduction: number
@@ -122,13 +124,21 @@ export function DashboardClient({
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           <IconBrandWhatsapp size={20} className="mt-0.5 shrink-0" />
           <div>
-            <strong>Activez les alertes WhatsApp</strong>
+            <strong>
+              {initialRole === "technician"
+                ? "Ajoutez votre numéro de téléphone"
+                : "Activez les alertes WhatsApp"}
+            </strong>
             <p className="text-blue-700">
-              Ajoutez votre numéro de téléphone dans votre{" "}
+              {initialRole === "technician"
+                ? "Renseignez votre numéro dans votre "
+                : "Ajoutez votre numéro de téléphone dans votre "}
               <a href="/tableau-de-bord/profil" className="underline underline-offset-2">
                 profil
               </a>{" "}
-              pour recevoir des alertes en cas de production anormale.
+              {initialRole === "technician"
+                ? "pour être contacté par vos clients."
+                : "pour recevoir des alertes en cas de production anormale."}
             </p>
           </div>
         </div>

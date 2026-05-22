@@ -12,6 +12,7 @@ export default async function DashboardPage() {
     <DashboardClient
       userName={session?.user?.name ?? ""}
       userPhone={(session?.user as { phone?: string } | undefined)?.phone ?? null}
+      userRole={(session?.user as { role?: string } | undefined)?.role ?? "client"}
       panelCount={data.panelCount}
       hourlyData={data.hourlyData}
       currentProduction={data.currentProduction}
