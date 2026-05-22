@@ -17,6 +17,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { authClient } from "@/lib/auth-client"
+import { Switch } from "@/components/ui/switch"
 import {
   IconBolt,
   IconSolarPanel,
@@ -25,6 +27,8 @@ import {
   IconAlertTriangle,
   IconBrandWhatsapp,
   IconUser,
+  IconEye,
+  IconEyeOff,
 } from "@tabler/icons-react"
 import { getDashboardData } from "@/lib/actions/energy"
 
@@ -37,6 +41,7 @@ export function DashboardClient({
   userName: initialName,
   userPhone: initialPhone,
   userRole: initialRole,
+  userVisible: initialVisible,
   panelCount: initialCount,
   hourlyData: initialData,
   currentProduction: initialProd,
@@ -47,6 +52,7 @@ export function DashboardClient({
   userName: string
   userPhone: string | null
   userRole: string
+  userVisible: boolean
   panelCount: number
   hourlyData: HourlyEnergy[]
   currentProduction: number
@@ -80,6 +86,21 @@ export function DashboardClient({
   const noPhone = !initialPhone
 
   if (initialRole === "technician") {
+    const [visible, setVisible] = useState(initialVisible)
+    const [toggling, setToggling] = useState(false)
+
+    const handleToggleVisibility = async (newVal: boolean) => {
+      setToggling(true)
+      setVisible(newVal)
+      const { error: updateError } = await authClient.updateUser({
+        visible: newVal,
+      } as never)
+      if (updateError) {
+        setVisible(!newVal)
+      }
+      setToggling(false)
+    }
+
     return (
       <div className="flex flex-1 flex-col gap-6">
         <div>
@@ -102,6 +123,40 @@ export function DashboardClient({
             </div>
           </div>
         )}
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex size-10 items-center justify-center rounded-full transition-colors ${
+                    visible
+                      ? "bg-emerald-100 text-emerald-600"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {visible ? <IconEye size={20} /> : <IconEyeOff size={20} />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {visible ? "Visible sur le réseau" : "Invisible sur le réseau"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {visible
+                      ? "Les clients peuvent vous trouver et vous contacter"
+                      : "Les clients ne peuvent pas vous voir"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={visible}
+                onCheckedChange={handleToggleVisibility}
+                disabled={toggling}
+                size="default"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Card>
