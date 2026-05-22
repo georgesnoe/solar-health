@@ -1,4 +1,4 @@
-import { getAlerts } from "@/lib/actions/alert"
+import { getAlerts, getAllAlerts } from "@/lib/actions/alert"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
@@ -12,7 +12,13 @@ export default async function AlertesPage() {
     redirect("/connexion")
   }
 
-  const alerts = await getAlerts()
+  const role = (session.user as { role?: string }).role ?? "client"
 
-  return <AlertsClient alerts={alerts} />
+  if (role === "technician") {
+    const alerts = await getAllAlerts()
+    return <AlertsClient alerts={alerts} role="technician" />
+  }
+
+  const alerts = await getAlerts()
+  return <AlertsClient alerts={alerts} role={role} />
 }

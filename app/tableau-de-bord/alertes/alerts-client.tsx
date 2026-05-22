@@ -1,14 +1,17 @@
 "use client"
 
-import { deleteAllAlerts } from "@/lib/actions/alert"
+import { useEffect, useState, useCallback } from "react"
+import { deleteAllAlerts, getAllAlerts } from "@/lib/actions/alert"
+import type { AlertWithUser } from "@/lib/actions/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconAlertTriangle, IconTrash, IconBell } from "@tabler/icons-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { IconAlertTriangle, IconTrash, IconBell, IconBrandWhatsapp } from "@tabler/icons-react"
 
 type Alert = {
   id: string
+  userId?: string
+  userName?: string
+  userPhone?: string | null
   message: string
   expected: string
   actual: string
@@ -16,29 +19,59 @@ type Alert = {
   createdAt: Date
 }
 
-export function AlertsClient({ alerts }: { alerts: Alert[] }) {
-  const router = useRouter()
+export function AlertsClient({
+  alerts: initialAlerts,
+  role,
+}: {
+  alerts: Alert[]
+  role: string
+}) {
+  const [alerts, setAlerts] = useState(initialAlerts)
   const [deleting, setDeleting] = useState(false)
+
+  const fetchAlerts = useCallback(async () => {
+    if (role !== "technician") return
+    try {
+      const result = await getAllAlerts()
+      setAlerts(result)
+    } catch {
+      // ignore
+    }
+  }, [role])
+
+  useEffect(() => {
+    if (role !== "technician") return
+    const interval = setInterval(fetchAlerts, 60_000)
+    return () => clearInterval(interval)
+  }, [fetchAlerts, role])
 
   const handleDeleteAll = async () => {
     setDeleting(true)
     await deleteAllAlerts()
     setDeleting(false)
-    router.refresh()
+    setAlerts([])
   }
+
+  const isTechnician = role === "technician"
 
   if (alerts.length === 0) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-semibold">Alertes</h1>
-          <p className="text-muted-foreground">Historique des alertes de production</p>
+          <h1 className="text-2xl font-semibold">{isTechnician ? "Alertes clients" : "Alertes"}</h1>
+          <p className="text-muted-foreground">
+            {isTechnician
+              ? "Aucune alerte en cours chez vos clients"
+              : "Historique des alertes de production"}
+          </p>
         </div>
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-16 text-center">
           <IconBell size={48} className="text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">Aucune alerte</p>
           <p className="text-xs text-muted-foreground">
-            Les alertes apparaîtront ici lorsque la production sera anormalement basse
+            {isTechnician
+              ? "Les alertes des clients apparaîtront ici en temps réel"
+              : "Les alertes apparaîtront ici lorsque la production sera anormalement basse"}
           </p>
         </div>
       </div>
@@ -49,20 +82,23 @@ export function AlertsClient({ alerts }: { alerts: Alert[] }) {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Alertes</h1>
+          <h1 className="text-2xl font-semibold">{isTechnician ? "Alertes clients" : "Alertes"}</h1>
           <p className="text-muted-foreground">
             {alerts.length} alerte{alerts.length > 1 ? "s" : ""}
+            {isTechnician && " en cours"}
           </p>
         </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDeleteAll}
-          disabled={deleting}
-        >
-          <IconTrash size={16} />
-          {deleting ? "Suppression..." : "Tout supprimer"}
-        </Button>
+        {!isTechnician && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteAll}
+            disabled={deleting}
+          >
+            <IconTrash size={16} />
+            {deleting ? "Suppression..." : "Tout supprimer"}
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-3">
@@ -75,7 +111,11 @@ export function AlertsClient({ alerts }: { alerts: Alert[] }) {
                   className="mt-0.5 shrink-0 text-amber-500"
                 />
                 <div>
-                  <CardTitle className="text-base">{alert.message}</CardTitle>
+                  <CardTitle className="text-base">
+                    {isTechnician && alert.userName
+                      ? `${alert.message} — ${alert.userName}`
+                      : alert.message}
+                  </CardTitle>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {new Date(alert.createdAt).toLocaleDateString("fr-FR", {
                       day: "numeric",
@@ -91,8 +131,27 @@ export function AlertsClient({ alerts }: { alerts: Alert[] }) {
                 -{alert.percentage}%
               </div>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Production : {alert.actual} kWh (attendu : {alert.expected} kWh)
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Production : {alert.actual} kWh (attendu : {alert.expected} kWh)
+              </p>
+              {isTechnician && alert.userPhone && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  render={
+                    <a
+                      href={`https://wa.me/${alert.userPhone}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  }
+                >
+                  <IconBrandWhatsapp size={16} />
+                  Contacter le client
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
