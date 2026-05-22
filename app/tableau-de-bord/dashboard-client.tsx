@@ -87,7 +87,7 @@ export function DashboardClient({
 
   const isLowProduction =
     data.currentExpected > 0 &&
-    data.currentProduction < data.currentExpected * 0.9
+    data.currentProduction < data.currentExpected * 0.8
 
   if (data.panelCount === 0) {
     return (

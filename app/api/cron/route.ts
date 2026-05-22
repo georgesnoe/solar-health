@@ -96,7 +96,7 @@ export async function POST(request: Request) {
   const alerts: (typeof alert.$inferInsert)[] = []
   for (const userId of userIds) {
     const user = userMap.get(userId)!
-    if (user.expectedWh > 0 && user.productionWh < user.expectedWh * 0.9) {
+    if (user.expectedWh > 0 && user.productionWh < user.expectedWh * 0.8) {
       const percentage = Math.round((1 - user.productionWh / user.expectedWh) * 100)
       alerts.push({
         id: crypto.randomUUID(),
