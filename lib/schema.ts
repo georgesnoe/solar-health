@@ -11,6 +11,7 @@ import {
 export const userRoles = pgEnum("role", ["admin", "client", "technician"])
 export const panelStatus = pgEnum("panel_status", ["active", "inactive"])
 export const energyType = pgEnum("energy_type", ["production", "consumption"])
+export const interventionStatus = pgEnum("intervention_status", ["pending", "confirmed"])
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -186,6 +187,84 @@ export const energyRecordRelations = relations(energyRecord, ({ one }) => ({
   }),
   user: one(user, {
     fields: [energyRecord.userId],
+    references: [user.id],
+  }),
+}))
+
+export const intervention = pgTable(
+  "intervention",
+  {
+    id: text("id").primaryKey(),
+    alertId: text("alert_id").references(() => alert.id, { onDelete: "set null" }),
+    technicianId: text("technician_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: interventionStatus().default("pending").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("intervention_technician_idx").on(table.technicianId),
+    index("intervention_client_idx").on(table.clientId),
+  ]
+)
+
+export const interventionRelations = relations(intervention, ({ one }) => ({
+  technician: one(user, {
+    fields: [intervention.technicianId],
+    references: [user.id],
+  }),
+  client: one(user, {
+    fields: [intervention.clientId],
+    references: [user.id],
+  }),
+  alert: one(alert, {
+    fields: [intervention.alertId],
+    references: [alert.id],
+  }),
+}))
+
+export const review = pgTable(
+  "review",
+  {
+    id: text("id").primaryKey(),
+    interventionId: text("intervention_id")
+      .notNull()
+      .references(() => intervention.id, { onDelete: "cascade" }),
+    technicianId: text("technician_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    score: text("score").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("review_technician_idx").on(table.technicianId),
+    index("review_intervention_idx").on(table.interventionId),
+  ]
+)
+
+export const reviewRelations = relations(review, ({ one }) => ({
+  intervention: one(intervention, {
+    fields: [review.interventionId],
+    references: [intervention.id],
+  }),
+  technician: one(user, {
+    fields: [review.technicianId],
+    references: [user.id],
+  }),
+  client: one(user, {
+    fields: [review.clientId],
     references: [user.id],
   }),
 }))
