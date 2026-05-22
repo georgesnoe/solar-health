@@ -6,7 +6,7 @@ import dynamic from "next/dynamic"
 import { getInterventionById } from "@/lib/actions/intervention"
 import type { InterventionWithDetails } from "@/lib/actions/intervention"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconUser, IconBrandWhatsapp, IconAlertTriangle, IconMapPin, IconClipboardList } from "@tabler/icons-react"
+import { IconUser, IconBrandWhatsapp, IconAlertTriangle, IconMapPin, IconClipboardList, IconPhone } from "@tabler/icons-react"
 
 const LocationMap = dynamic(
   () => import("@/components/location-picker").then((m) => ({ default: m.RouteMap })),
@@ -77,15 +77,24 @@ export default function InterventionDetailPage() {
           <div>
             <p className="text-sm font-medium">{intervention.clientName}</p>
             {intervention.clientPhone && (
-              <a
-                href={`https://wa.me/${intervention.clientPhone}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-              >
-                <IconBrandWhatsapp size={14} />
-                {intervention.clientPhone}
-              </a>
+              <div className="mt-2 flex gap-2">
+                <a
+                  href={`https://wa.me/${intervention.clientPhone}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-4xl border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-muted"
+                >
+                  <IconBrandWhatsapp size={16} />
+                  Contacter sur WhatsApp
+                </a>
+                <a
+                  href={`tel:+${intervention.clientPhone}`}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-4xl bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+                >
+                  <IconPhone size={16} />
+                  Appeler le client
+                </a>
+              </div>
             )}
           </div>
           {intervention.notes && (
