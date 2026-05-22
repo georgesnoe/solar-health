@@ -40,7 +40,7 @@ export default function SignupPage() {
         password,
         name,
         role,
-        phone: phone || undefined,
+        phone: phone.replace(/[\s+]/g, '') || undefined,
         callbackURL: "/tableau-de-bord",
       } as never)
       if (authError) {

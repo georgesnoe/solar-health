@@ -54,7 +54,7 @@ export default function ProfilPage() {
       if (name !== user?.name || phone !== (user?.phone ?? "")) {
         const { error: updateError } = await authClient.updateUser({
           name,
-          phone: phone || undefined,
+          phone: phone.replace(/[\s+]/g, '') || undefined,
         } as never)
         if (updateError) {
           setError(updateError.message ?? "Erreur lors de la mise à jour du profil")
