@@ -1,12 +1,18 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconEdit, IconDeviceFloppy, IconX } from "@tabler/icons-react"
+import { IconEdit, IconDeviceFloppy, IconX, IconMapPin } from "@tabler/icons-react"
+
+const LocationPicker = dynamic(
+  () => import("@/components/location-picker").then((m) => ({ default: m.LocationPicker })),
+  { ssr: false }
+)
 
 const roleLabels: Record<string, string> = {
   client: "Client",
@@ -15,19 +21,30 @@ const roleLabels: Record<string, string> = {
 }
 
 export default function ProfilPage() {
-  const { data } = authClient.useSession()
-  const user = data?.user as { name: string; email: string; role?: string; phone?: string } | undefined
+  const { data, refetch } = authClient.useSession()
+  const user = data?.user as {
+    name: string
+    email: string
+    role?: string
+    phone?: string
+    latitude?: string
+    longitude?: string
+  } | undefined
 
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
   const [phone, setPhone] = useState(user?.phone ?? "")
+  const [latitude, setLatitude] = useState(user?.latitude ?? "")
+  const [longitude, setLongitude] = useState(user?.longitude ?? "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [savingLocation, setSavingLocation] = useState(false)
 
   const hasChanges = name !== user?.name || phone !== (user?.phone ?? "") || currentPassword.length > 0 || newPassword.length > 0
+  const locationChanged = latitude !== (user?.latitude ?? "") || longitude !== (user?.longitude ?? "")
 
   const handleSave = async () => {
     setSaving(true)
@@ -77,12 +94,51 @@ export default function ProfilPage() {
     setEditing(false)
   }
 
+  const handleSaveLocation = async () => {
+    setSavingLocation(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const { error: updateError } = await authClient.updateUser({
+        latitude: latitude || undefined,
+        longitude: longitude || undefined,
+      } as never)
+      if (updateError) {
+        setError(updateError.message ?? "Erreur lors de la mise à jour de la localisation")
+        setSavingLocation(false)
+        return
+      }
+      setSuccess("Localisation mise à jour avec succès")
+      await refetch()
+    } catch {
+      setError("Une erreur inattendue s'est produite")
+    } finally {
+      setSavingLocation(false)
+    }
+  }
+
+  const handleResetLocation = () => {
+    setLatitude(user?.latitude ?? "")
+    setLongitude(user?.longitude ?? "")
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">Profil</h1>
         <p className="text-muted-foreground">Gérez vos informations personnelles</p>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
+          {success}
+        </div>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -98,17 +154,6 @@ export default function ProfilPage() {
           )}
         </CardHeader>
         <CardContent className="grid gap-4">
-          {error && (
-            <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="rounded-lg bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
-              {success}
-            </div>
-          )}
-
           <div className="grid gap-2">
             <Label>Email</Label>
             <div className="rounded-lg border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
@@ -195,6 +240,40 @@ export default function ProfilPage() {
             <Button onClick={handleSave} disabled={!hasChanges || saving}>
               <IconDeviceFloppy size={16} />
               {saving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <IconMapPin size={18} />
+            Localisation
+          </CardTitle>
+          <CardDescription>
+            Déplacez le marqueur sur la carte ou utilisez votre position actuelle
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LocationPicker
+            latitude={latitude || null}
+            longitude={longitude || null}
+            onChange={(lat, lng) => {
+              setLatitude(lat)
+              setLongitude(lng)
+            }}
+          />
+        </CardContent>
+        {locationChanged && (
+          <CardFooter className="flex justify-end gap-2 pt-6">
+            <Button variant="ghost" onClick={handleResetLocation} disabled={savingLocation}>
+              <IconX size={16} />
+              Annuler
+            </Button>
+            <Button onClick={handleSaveLocation} disabled={savingLocation}>
+              <IconDeviceFloppy size={16} />
+              {savingLocation ? "Enregistrement..." : "Enregistrer la position"}
             </Button>
           </CardFooter>
         )}
